@@ -1,4 +1,8 @@
 import scrapy
+import undetected_chromedriver as uc
+from selenium.webdriver.chrome import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
 class LinkedInPeopleProfileSpider(scrapy.Spider):
     name = "linkedin_people_profile"
@@ -7,8 +11,24 @@ class LinkedInPeopleProfileSpider(scrapy.Spider):
         'FEEDS': { 'data/%(name)s_%(time)s.jsonl': { 'format': 'jsonlines',}}
         }
 
+    def __init__(self):
+        self.options = uc.ChromeOptions()
+        self.options.add_argument("start-maximized")
+        self.options.add_argument(
+            "user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
+        )
+        self.options.add_argument("disable-infobars")
+        self.options.add_argument("--disable-extensions")
+        self.options.binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
+
+        # Initializing the webdriver
+        self.service = Service(executable_path=ChromeDriverManager().install())
+        self.driver = webdriver.Chrome(service=self.service, options=self.options)
+
+
     def start_requests(self):
-        profile_list = ['reidhoffman']
+        profile_list = ['chao-liu-b9380925b']
+
         for profile in profile_list:
             linkedin_people_url = f'https://www.linkedin.com/in/{profile}/' 
             yield scrapy.Request(url=linkedin_people_url, callback=self.parse_profile, meta={'profile': profile, 'linkedin_url': linkedin_people_url})
@@ -25,9 +45,15 @@ class LinkedInPeopleProfileSpider(scrapy.Spider):
         item['name'] = summary_box.css("h1::text").get().strip()
         item['description'] = summary_box.css("h2::text").get().strip()
 
+        email = response.css('section.pv-contact-info__contact-type:nth-child(2) a::attr(href)').get()
+        if email and email.startswith('mailto:'):
+            email = email.replace('mailto:', '')
+            item['email'] = email
+
         ## Location
         try:
             item['location'] = summary_box.css('div.top-card__subline-item::text').get()
+
         except:
             item['location'] = summary_box.css('span.top-card__subline-item::text').get().strip()
             if 'followers' in item['location'] or 'connections' in item['location']:
