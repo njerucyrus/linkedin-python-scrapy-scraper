@@ -28,6 +28,8 @@ EXTENSIONS = {
 
 
 DOWNLOADER_MIDDLEWARES = {
+    #cookie middleware
+    'scrapy.downloadermiddlewares.cookies.CookiesMiddleware': 700,
 
     ## ScrapeOps Monitor
     'scrapeops_scrapy.middleware.retry.RetryMiddleware': 550,
