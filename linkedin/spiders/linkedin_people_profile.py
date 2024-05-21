@@ -19,8 +19,8 @@ import undetected_chromedriver as uc
 from dotenv import load_dotenv
 load_dotenv()
 
-username = 'YOUR EMAIL'
-password = 'YOUR PASSWORD'
+username = 'chao.liu@macaws.ai'
+password = '123Warwick123*'
 
 class LinkedInPeopleProfileSpider(scrapy.Spider):
     name = "linkedin_people_profile"
@@ -76,7 +76,7 @@ class LinkedInPeopleProfileSpider(scrapy.Spider):
         scrapy_cookies = {cookie['name']: cookie['value'] for cookie in cookies}
         #update_cookies
         self.scrapy_cookies = scrapy_cookies
-        self.driver.quit()
+
 
     def start_requests(self):
         if self.scrapy_cookies is not None:
@@ -87,6 +87,8 @@ class LinkedInPeopleProfileSpider(scrapy.Spider):
                 linkedin_people_url = f'https://www.linkedin.com/in/{profile}/'
                 yield scrapy.Request(url=linkedin_people_url, callback=self.parse_profile, cookies=self.scrapy_cookies,
                                      meta={'profile': profile, 'linkedin_url': linkedin_people_url})
+
+            self.driver.quit()
         else:
             print('No cookies found. Needs login to continue')
             pass
